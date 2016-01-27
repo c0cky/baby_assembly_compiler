@@ -6,7 +6,10 @@
 */
 int instructions[65536];
 %%
-"."alloc {printf("alloc thisssssss");}
+
+"$"[A-Za-z]+":" {printf("this is a label breh");}
+
+" "*"."alloc" "+ {printf("alloc thisssssss");}
 
 load {printf("load");}
 
@@ -26,9 +29,22 @@ div {printf("div");}
 
 mod {printf("mod");}
 
+<<EOF>> {printf("you found the end of the file.. nioce \n");yyterminate();}
+
 %%
-int main()
+int main(argc, argv)
+int argc;
+char **argv;
 {
+  ++argv, --argc;
+  if (argc > 0)
+  {
+    yyin = fopen(argv[0], "r");
+  }
+  else
+  {
+    yyin = stdin;
+  }
   yylex();
 }
 

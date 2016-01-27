@@ -7,4 +7,4 @@ lex.yy.c: hw1.l
 	$(LEX) $^
 
 clean: 
-	$(RM) *.o lex.yy.c
+	$(RM) ba *.o lex.yy.c
