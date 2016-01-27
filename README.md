@@ -2,6 +2,4 @@
 
 to run: `make`
 
-dependencies:
-	gnu flex
-	gcc
+dependencies: flex & gcc
