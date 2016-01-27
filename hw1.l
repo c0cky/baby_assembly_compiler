@@ -4,30 +4,31 @@
 * Baby Assembly Compiler
 *
 */
-int instructions[65536];
+	int instructions[65536];
+
 %%
 
-"$"[A-Za-z]+":" {printf("this is a label breh");}
+"$"[A-Za-z_]+":" {printf("this is a label breh");}
 
-" "*"."alloc" "+ {printf("alloc thisssssss");}
+" "*"."alloc" "+[A-Za-z_]+","?" "*[0-9]* {printf("alloc thisssssss");}
 
-load {printf("load");}
+" "*load {printf("load");}
 
-loada {printf("loada");}
+" "*loada {printf("loada");}
 
-store {printf("store");}
+" "*store {printf("store");}
 
-move {printf("move");}
+" "*move {printf("move");}
 
-add {printf("add");}
+" "*add {printf("add");}
 
-sub {printf("sub");}
+" "*sub {printf("sub");}
 
-mul {printf("sub");}
+" "*mul {printf("sub");}
 
-div {printf("div");}
+" "*div {printf("div");}
 
-mod {printf("mod");}
+" "*mod {printf("mod");}
 
 <<EOF>> {printf("you found the end of the file.. nioce \n");yyterminate();}
 
