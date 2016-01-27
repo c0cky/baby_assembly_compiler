@@ -685,7 +685,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 9 "hw1.l"
+#line 11 "hw1.l"
 
 
 #line 692 "lex.yy.c"
@@ -773,66 +773,66 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 11 "hw1.l"
+#line 13 "hw1.l"
 {printf("this is a label breh");}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 13 "hw1.l"
+#line 15 "hw1.l"
 {printf("alloc thisssssss");}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 15 "hw1.l"
+#line 17 "hw1.l"
 {printf("load");}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 17 "hw1.l"
+#line 19 "hw1.l"
 {printf("loada");}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 19 "hw1.l"
+#line 21 "hw1.l"
 {printf("store");}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 21 "hw1.l"
+#line 23 "hw1.l"
 {printf("move");}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 23 "hw1.l"
+#line 25 "hw1.l"
 {printf("add");}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 25 "hw1.l"
+#line 27 "hw1.l"
 {printf("sub");}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 27 "hw1.l"
+#line 29 "hw1.l"
 {printf("sub");}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 29 "hw1.l"
+#line 31 "hw1.l"
 {printf("div");}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 31 "hw1.l"
+#line 33 "hw1.l"
 {printf("mod");}
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 33 "hw1.l"
+#line 35 "hw1.l"
 {printf("you found the end of the file.. nioce \n");yyterminate();}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 35 "hw1.l"
+#line 37 "hw1.l"
 ECHO;
 	YY_BREAK
 #line 839 "lex.yy.c"
@@ -1831,7 +1831,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 35 "hw1.l"
+#line 37 "hw1.l"
 
 
 int main(argc, argv)

@@ -6,6 +6,8 @@
 */
 	int instructions[65536];
 
+reg "r"[0-7]{1}
+
 %%
 
 "$"[A-Za-z_]+":" {printf("this is a label breh");}
