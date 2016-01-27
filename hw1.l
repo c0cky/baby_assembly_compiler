@@ -7,16 +7,16 @@
 	int instructions[65536];
 
 reg "r"[0-7]{1}
-
+rg2 ","" "*(("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
 %%
 
 "$"[A-Za-z_]+":" {printf("this is a label breh");}
 
 " "*"."alloc" "+[A-Za-z_]+","?" "*[0-9]* {printf("alloc thisssssss");}
 
-" "*load {printf("load");}
+" "*load" "*{reg}{rg2} {printf("load");}
 
-" "*loada {printf("loada");}
+" "*loada" "*{reg}{rg2}  {printf("loada");}
 
 " "*store {printf("store");}
 
