@@ -18,19 +18,21 @@ rg2 ","" "*(("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
 
 " "*loada" "*{reg}{rg2}  {printf("loada");}
 
-" "*store {printf("store");}
+" "*store" "*{reg}{rg2}  {printf("store");}
 
-" "*move {printf("move");}
+" "*move" "*{reg}{rg2}  {printf("move");}
 
-" "*add {printf("add");}
+" "*add" "*{reg}{rg2}  {printf("add");}
 
-" "*sub {printf("sub");}
+" "*sub" "*{reg}{rg2}  {printf("sub");}
 
-" "*mul {printf("sub");}
+" "*mul" "*{reg}{rg2}  {printf("sub");}
 
-" "*div {printf("div");}
+" "*div" "*{reg}{rg2}  {printf("div");}
 
-" "*mod {printf("mod");}
+" "*mod" "*{reg}{rg2}  {printf("mod");}
+
+" "*cmp" "*{reg}{rg2}  {printf("cmp");}
 
 <<EOF>> {printf("you found the end of the file.. nioce \n");yyterminate();}
 
