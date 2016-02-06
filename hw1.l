@@ -5,37 +5,61 @@
 *
 */
 
-
+crap ","" "*
 reg "r"[0-7]{1}
-rg2 ","" "*(("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
-
+rg2 (("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
     unsigned char opcode = -1;
-    
+    char *mystring;
+    unsigned char reg1 = -1;
+    unsigned char reg2 = -1;
 %%
+{crap}
+
+
+{reg}  {
+          printf("this is reg1: ");
+          mystring = malloc(yyleng+1);
+          strcpy(mystring, yytext);
+          printf("%s", mystring);
+       }
+
+{rg2} {
+         printf("this is reg2: ");
+         mystring = malloc(yyleng+1);
+         strcpy(mystring, yytext); 
+         printf("%s", mystring); 
+      }
+
 
 "$"[A-Za-z_]+":" {printf("this is a label breh");}
 
 " "*"."alloc" "+[A-Za-z_]+","?" "*[0-9]* {printf("alloc thisssssss");}
 
-" "*load" "*{reg}{rg2} {opcode = 0;printf("load");}
+" "*load" "* {opcode = 0;printf("load");}
 
-" "*loada" "*{reg}{rg2}  {opcode = 1;printf("loada");}
+" "*loada" "*  {opcode = 1;printf("loada");}
 
-" "*store" "*{reg}{rg2}  {opcode = 2;printf("store");}
+" "*store" "*  {opcode = 2;printf("store");}
 
-" "*move" "*{reg}{rg2}  {opcode = 3;printf("move");}
+" "*move" "*  {opcode = 3;printf("move");}
 
-" "*add" "*{reg}{rg2}  {opcode = 4;printf("add");}
+" "*add" "*  {opcode = 4;printf("add");}
 
-" "*sub" "*{reg}{rg2}  {opcode = 5;printf("sub");}
+" "*sub" "*  {opcode = 5;printf("sub");}
 
-" "*mul" "*{reg}{rg2}  {opcode = 6;printf("sub");}
+" "*mul" "*  {opcode = 6;printf("sub");}
 
-" "*div" "*{reg}{rg2}  {opcode = 7;printf("div");}
+" "*div" "*  {opcode = 7;printf("div");}
 
-" "*mod" "*{reg}{rg2}  {opcode = 8;printf("mod");}
+" "*mod" "*  {opcode = 8;printf("mod");}
 
-" "*cmp" "*{reg}{rg2}  {opcode = 9;printf("cmp");}
+" "*cmp" "*  {opcode = 9;printf("cmp");}
+
+" "*b" "* {opcode = 10;printf("b");}
+
+" "*ble" "* {opcode = 11;printf("ble");}
+
+" "*bgt" "* {opcode = 12;printf("bgt");}
 
 <<EOF>> {printf("you found the end of the file.. nioce \n");yyterminate();}
 
