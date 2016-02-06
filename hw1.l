@@ -9,6 +9,7 @@
 reg "r"[0-7]{1}
 rg2 ","" "*(("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
 
+    unsigned char opcode = -1;
 
 %%
 
@@ -16,25 +17,25 @@ rg2 ","" "*(("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
 
 " "*"."alloc" "+[A-Za-z_]+","?" "*[0-9]* {printf("alloc thisssssss");}
 
-" "*load" "*{reg}{rg2} {printf("load");}
+" "*load" "*{reg}{rg2} {opcode = 0;printf("load");}
 
-" "*loada" "*{reg}{rg2}  {printf("loada");}
+" "*loada" "*{reg}{rg2}  {opcode = 1;printf("loada");}
 
-" "*store" "*{reg}{rg2}  {printf("store");}
+" "*store" "*{reg}{rg2}  {opcode = 2;printf("store");}
 
-" "*move" "*{reg}{rg2}  {printf("move");}
+" "*move" "*{reg}{rg2}  {opcode = 3;printf("move");}
 
-" "*add" "*{reg}{rg2}  {printf("add");}
+" "*add" "*{reg}{rg2}  {opcode = 4;printf("add");}
 
-" "*sub" "*{reg}{rg2}  {printf("sub");}
+" "*sub" "*{reg}{rg2}  {opcode = 5;printf("sub");}
 
-" "*mul" "*{reg}{rg2}  {printf("sub");}
+" "*mul" "*{reg}{rg2}  {opcode = 6;printf("sub");}
 
-" "*div" "*{reg}{rg2}  {printf("div");}
+" "*div" "*{reg}{rg2}  {opcode = 7;printf("div");}
 
-" "*mod" "*{reg}{rg2}  {printf("mod");}
+" "*mod" "*{reg}{rg2}  {opcode = 8;printf("mod");}
 
-" "*cmp" "*{reg}{rg2}  {printf("cmp");}
+" "*cmp" "*{reg}{rg2}  {opcode = 9;printf("cmp");}
 
 <<EOF>> {printf("you found the end of the file.. nioce \n");yyterminate();}
 
