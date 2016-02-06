@@ -10,7 +10,7 @@ reg "r"[0-7]{1}
 rg2 ","" "*(("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
 
     unsigned char opcode = -1;
-
+    
 %%
 
 "$"[A-Za-z_]+":" {printf("this is a label breh");}
@@ -47,12 +47,12 @@ rg2 ","" "*(("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
 #define INITIAL_HASH_SIZE 8
 #define MAX_LOAD_FACTOR 2
 #define SCALE_FACTOR 2
-int h_size;     // Current size of the hash table array
-int num_items;  // Number of items stored in the dictionary
-DR *hash_tab;   // The actual array (dynamically allocated)
-h_size = INITIAL_HASH_SIZE;
-/* Assume DR is a type defined as a pointer to a hash table record */
-hash_tab = (DR *) malloc(h_size * sizeof(DR));
+//int h_size;     // Current size of the hash table array
+//int num_items;  // Number of items stored in the dictionary
+//DR *hash_tab;   // The actual array (dynamically allocated)
+//h_size = INITIAL_HASH_SIZE;
+// Assume DR is a type defined as a pointer to a hash table record */
+//hash_tab = (DR *) malloc(h_size * sizeof(DR));
 
 enum opCodes { LOAD, LOADA, STORE, MOVE, ADD, SUB, MUL, DIV, MOD, CMP };
 enum modes { REGISTER, DIRECT, INDIRECT, IMMEDIATE };
@@ -115,8 +115,6 @@ int preProcessAllocFunction(char *instructionString) {
   while(*s != '.') s++;
   s += 6; //skip over ".alloc"
   while(!isalpha(*s)) s++;
-  label += s;
-  s++;
   while((isalpha(*s) || isdigit(*s)) && *s != ',' && *s != ' ') s++;
   
 }
@@ -144,7 +142,7 @@ int preProcessLoadInstruction(char *instructionString) {
   while(*s != 'l') s++;
   s += 4; //skip over "load"
   while(*s != 'r') s++; //first arg will be a register
-  reg1_no = s[1] - '0';//get the reg no of 
+  unsigned char reg1_no = s[1] - '0';//get the reg no of 
 }
 
 int processInstruction(char *opcode, unsigned char mode, unsigned char reg1, unsigned char other) {
