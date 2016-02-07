@@ -7,12 +7,16 @@
 
 crap ","" "*
 reg "r"[0-7]{1}
-rg2 (("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
+rg2 [^\$](("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
     unsigned char opcode = -1;
     char *mystring;
     unsigned char reg1 = -1;
     unsigned char reg2 = -1;
 %%
+
+"$"[A-Za-z_]+":"? {printf("this is a label breh");}
+
+
 {crap}
 
 
@@ -30,8 +34,6 @@ rg2 (("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
          printf("%s", mystring); 
       }
 
-
-"$"[A-Za-z_]+":" {printf("this is a label breh");}
 
 " "*"."alloc" "+[A-Za-z_]+","?" "*[0-9]* {printf("alloc thisssssss");}
 
@@ -59,7 +61,11 @@ rg2 (("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
 
 " "*ble" "* {opcode = 11;printf("ble");}
 
-" "*bgt" "* {opcode = 12;printf("bgt");}
+" "*bge" "* {opcode = 12;printf("bge");}
+
+" "*write" "* {opcode = 13;printf("write");}
+
+" "*read" "* {opcode = 14; printf("read");}
 
 <<EOF>> {printf("you found the end of the file.. nioce \n");yyterminate();}
 
