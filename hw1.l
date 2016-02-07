@@ -107,7 +107,13 @@ vrg2 ([A-Za-z_]+)
 
 #include <stdlib.h>
 
-//nlist is hashtable implementation from C programming book
+/* 
+* nlist is hashtable implementation from C programming book
+* taken in section 6.6 of The C programming language 2nd edition
+* 
+* authored by Dennis Ritchie and Brian Kernighan
+*
+*/
 struct nlist { /* table entry: */
     struct nlist *next; /* next entry in chain */
     char *name; /* defined name */
@@ -155,7 +161,7 @@ struct nlist *install(char *name, char *defn)
        return NULL;
     return np;
 }
-//end of hash table
+//end of nlist implementation from The C Programming Language 2nd edition
 
 char *strdup(char *s) /* make a duplicate of s */
 {
