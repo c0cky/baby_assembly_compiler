@@ -7,67 +7,99 @@
 
 crap ","" "*
 reg "r"[0-7]{1}
-rg2 [^\$](("("?"r"[0-7]{1}")"?)|([0-9]+)|([A-Za-z_]+))
+rg2 [^\$]("("?"r"[0-7]{1}")"?)
+drg2 [^\$]([0-9]+)
+vrg2 ([A-Za-z_]+)
+
+    #include <stdbool.h>
+    bool alreadyReg1 = false;
     unsigned char opcode = -1;
     char *mystring;
     unsigned char reg1 = -1;
     unsigned char reg2 = -1;
 %%
 
-"$"[A-Za-z_]+":"? {printf("this is a label breh");}
+"$"[A-Za-z_]+ {fprintf(stderr, "this is a label breh");}
 
+"$"[A-Za-z_]+":" {fprintf(stderr, "this is a label branch");}
 
 {crap}
 
+[\n]  {alreadyReg1 = false;}
 
 {reg}  {
-          printf("this is reg1: ");
+          if (alreadyReg1 == false) {
+          fprintf(stderr, "this is reg1: ");
           mystring = malloc(yyleng+1);
           strcpy(mystring, yytext);
-          printf("%s", mystring);
+          fprintf(stderr, "%s", mystring);
+	  alreadyReg1 = true;
+	  }
        }
 
 {rg2} {
-         printf("this is reg2: ");
+         if (alreadyReg1) {
+         fprintf(stderr, "this is reg2: ");
          mystring = malloc(yyleng+1);
          strcpy(mystring, yytext); 
-         printf("%s", mystring); 
+         fprintf(stderr, "%s", mystring); 
+	 alreadyReg1 = false;
+	 }
       }
 
+{drg2} {
+         if(alreadyReg1) {
+	   fprintf(stderr, "this is direct reg2: ");
+	   mystring = malloc(yyleng+1);
+	   strcpy(mystring, yytext);
+	   fprintf(stderr, "%s", mystring);
+	   alreadyReg1 = false;
+	 }
+       }
 
-" "*"."alloc" "+[A-Za-z_]+","?" "*[0-9]* {printf("alloc thisssssss");}
+{vrg2} {
+         if(alreadyReg1) {
+	 fprintf(stderr, "this is variable reg2: ");
+	 mystring = malloc(yyleng+1);
+	 strcpy(mystring, yytext);
+	 fprintf(stderr, "%s", mystring);
+	 alreadyReg1 = false;
+	 }
+       }
 
-" "*load" "* {opcode = 0;printf("load");}
+" "*"."alloc" "+[A-Za-z_]+","?" "*[0-9]* {fprintf(stderr,"alloc thisssssss");}
 
-" "*loada" "*  {opcode = 1;printf("loada");}
+" "*load" "* {opcode = 0;fprintf(stderr, "load");}
 
-" "*store" "*  {opcode = 2;printf("store");}
+" "*loada" "*  {opcode = 1;fprintf(stderr, "loada");}
 
-" "*move" "*  {opcode = 3;printf("move");}
+" "*store" "*  {opcode = 2;fprintf(stderr,"store");}
 
-" "*add" "*  {opcode = 4;printf("add");}
+" "*move" "*  {opcode = 3;fprintf(stderr, "move");}
 
-" "*sub" "*  {opcode = 5;printf("sub");}
+" "*add" "*  {opcode = 4;fprintf(stderr, "add");}
 
-" "*mul" "*  {opcode = 6;printf("sub");}
+" "*sub" "*  {opcode = 5;fprintf(stderr, "sub");}
 
-" "*div" "*  {opcode = 7;printf("div");}
+" "*mul" "*  {opcode = 6;fprintf(stderr, "sub");}
 
-" "*mod" "*  {opcode = 8;printf("mod");}
+" "*div" "*  {opcode = 7;fprintf(stderr, "div");}
 
-" "*cmp" "*  {opcode = 9;printf("cmp");}
+" "*mod" "*  {opcode = 8;fprintf(stderr, "mod");}
 
-" "*b" "* {opcode = 10;printf("b");}
+" "*cmp" "*  {opcode = 9;fprintf(stderr, "cmp");}
 
-" "*ble" "* {opcode = 11;printf("ble");}
+" "*b" "* {opcode = 10;fprintf(stderr, "b");}
 
-" "*bge" "* {opcode = 12;printf("bge");}
+" "*ble" "* {opcode = 11;fprintf(stderr, "ble");}
 
-" "*write" "* {opcode = 13;printf("write");}
+" "*bge" "* {opcode = 12;fprintf(stderr, "bge");}
 
-" "*read" "* {opcode = 14; printf("read");}
+" "*write" "* {opcode = 13;fprintf(stderr, "write");}
 
-<<EOF>> {printf("you found the end of the file.. nioce \n");yyterminate();}
+" "*read" "* {opcode = 14; fprintf(stderr, "read");}
+
+<<EOF>> {fprintf(stderr, "you found the end of the file.. nioce \n");yyterminate();}
 
 %%
 
