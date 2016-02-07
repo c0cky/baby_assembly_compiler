@@ -106,15 +106,65 @@ vrg2 ([A-Za-z_]+)
 #define MAX 65536
 
 #include <stdlib.h>
-#define INITIAL_HASH_SIZE 8
-#define MAX_LOAD_FACTOR 2
-#define SCALE_FACTOR 2
-//int h_size;     // Current size of the hash table array
-//int num_items;  // Number of items stored in the dictionary
-//DR *hash_tab;   // The actual array (dynamically allocated)
-//h_size = INITIAL_HASH_SIZE;
-// Assume DR is a type defined as a pointer to a hash table record */
-//hash_tab = (DR *) malloc(h_size * sizeof(DR));
+
+//nlist is hashtable implementation from C programming book
+struct nlist { /* table entry: */
+    struct nlist *next; /* next entry in chain */
+    char *name; /* defined name */
+    char *defn; /* replacement text */
+};
+
+#define HASHSIZE 101
+static struct nlist *hashtab[HASHSIZE]; /* pointer table */
+
+/* hash: form hash value for string s */
+unsigned hash(char *s)
+{
+    unsigned hashval;
+    for (hashval = 0; *s != '\0'; s++)
+      hashval = *s + 31 * hashval;
+    return hashval % HASHSIZE;
+}
+
+/* lookup: look for s in hashtab */
+struct nlist *lookup(char *s)
+{
+    struct nlist *np;
+    for (np = hashtab[hash(s)]; np != NULL; np = np->next)
+        if (strcmp(s, np->name) == 0)
+          return np; /* found */
+    return NULL; /* not found */
+}
+
+char *strdup(char *);
+/* install: put (name, defn) in hashtab */
+struct nlist *install(char *name, char *defn)
+{
+    struct nlist *np;
+    unsigned hashval;
+    if ((np = lookup(name)) == NULL) { /* not found */
+        np = (struct nlist *) malloc(sizeof(*np));
+        if (np == NULL || (np->name = strdup(name)) == NULL)
+          return NULL;
+        hashval = hash(name);
+        np->next = hashtab[hashval];
+        hashtab[hashval] = np;
+    } else /* already there */
+        free((void *) np->defn); /*free previous defn */
+    if ((np->defn = strdup(defn)) == NULL)
+       return NULL;
+    return np;
+}
+//end of hash table
+
+char *strdup(char *s) /* make a duplicate of s */
+{
+    char *p;
+    p = (char *) malloc(strlen(s)+1); /* +1 for ’\0’ */
+    if (p != NULL)
+       strcpy(p, s);
+    return p;
+}
 
 enum opCodes { LOAD, LOADA, STORE, MOVE, ADD, SUB, MUL, DIV, MOD, CMP };
 enum modes { REGISTER, DIRECT, INDIRECT, IMMEDIATE };
@@ -211,10 +261,4 @@ int processInstruction(char *opcode, unsigned char mode, unsigned char reg1, uns
   
 }
 
-int hash(const char *key, int h_size)
-{
-  int sum = 0;
-  for (; *key; key++)
-    sum = (37*sum + *key) % h_size;
-  return sum;
-}
+
