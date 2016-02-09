@@ -6,11 +6,13 @@
 */
 
 crap ","" "*
+tab [\t]*
 reg "r"[0-7]{1}
 rg2 [^\$]("r"[0-7]{1})
 imrg2 [^\$]([0-9]+)
 drg2 ([A-Za-z_]+)
 inrg2 [^\S]("("?"r"[0-7]{1}")"?)
+pre [ \0\t\s]*,*[ \0\t\s]*
 
     #include <stdbool.h>
     bool alreadyReg1 = false;
@@ -18,9 +20,11 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
     unsigned char opcode = -1;
     unsigned char mode = -1;
     short labelSize = -1;
+    short lineNumbers = 0;
     char *label = "";
     char *reg1 = "";
     char *reg2 = "";
+    enum comp { LESS, EQUAL, GREATER };
     short im_constant;
     int processRg2(unsigned char opcode, char *reg1, char *reg2);
     int processDRg2(unsigned char opcode, char *reg1, char *var);
@@ -35,7 +39,22 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 
 {crap}
 
-[\n]  {alreadyReg1 = false;reg1 = ""; reg2 = ""; opcode = -1;label = "";labelSize = -1;}
+
+[\n]  {
+       if(allocInstr) {
+         labelSize = 1;
+	 fprintf(stderr, "%s", yytext);
+	 processAlloc(label, labelSize);
+	 allocInstr = false;
+       }
+       lineNumbers++;
+       alreadyReg1 = false;
+       reg1 = "";
+       reg2 = "";
+       opcode = -1;
+       label = "";
+       labelSize = -1;
+      }
 
 {reg}  {
           if (alreadyReg1 == false) {
@@ -60,7 +79,14 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 
 
 
-{drg2} {
+{drg2} { if(allocInstr) 
+         {
+	   char *s = yytext;
+	   while(isspace(*s)) s++;
+	   label= malloc(strlen(s)+1);
+	   strcpy(label, s);
+	   fprintf(stderr, "%s", label);
+         }
          if(alreadyReg1) {
 	   fprintf(stderr, "this is direct reg2: ");
 	   reg2 = malloc(yyleng+1);
@@ -100,48 +126,38 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 
        }
 
-" "*"."alloc   {allocInstr = true; fprintf(stderr, "alloc. : ");}
+{pre}\.alloc{pre}   {allocInstr = true; fprintf(stderr, "alloc. : ");}
 
-" "+[A-Za-z_]+  {
-              if(allocInstr)
-	      {
-	        char *s = yytext;
-		while(isspace(*s)) s++;
-	        label = malloc(strlen(s)+1);
-		strcpy(label, s);
-		fprintf(stderr, "%s", label);
-	      }
-            }
 
-" "*load" "* {opcode = 0;fprintf(stderr, "load");}
+{pre}load{pre} {opcode = 0;fprintf(stderr, "load");}
 
-" "*loada" "*  {opcode = 1;fprintf(stderr, "loada");}
+{pre}loada{pre}  {opcode = 1;fprintf(stderr, "loada");}
 
-" "*store" "*  {opcode = 2;fprintf(stderr,"store");}
+{pre}store{pre}  {opcode = 2;fprintf(stderr,"store");}
 
-" "*move" "*  {opcode = 3;fprintf(stderr, "move");}
+{pre}move{pre}  {opcode = 3;fprintf(stderr, "move");}
 
-" "*add" "*  {opcode = 4;fprintf(stderr, "add");}
+{pre}add{pre}  {opcode = 4;fprintf(stderr, "add");}
 
-" "*sub" "*  {opcode = 5;fprintf(stderr, "sub");}
+{pre}sub{pre}  {opcode = 5;fprintf(stderr, "sub");}
 
-" "*mul" "*  {opcode = 6;fprintf(stderr, "sub");}
+{pre}mul{pre}  {opcode = 6;fprintf(stderr, "sub");}
 
-" "*div" "*  {opcode = 7;fprintf(stderr, "div");}
+{pre}div{pre}  {opcode = 7;fprintf(stderr, "div");}
 
-" "*mod" "*  {opcode = 8;fprintf(stderr, "mod");}
+{pre}mod{pre}  {opcode = 8;fprintf(stderr, "mod");}
 
-" "*cmp" "*  {opcode = 9;fprintf(stderr, "cmp");}
+{pre}cmp{pre}  {opcode = 9;fprintf(stderr, "cmp");}
 
-" "*b" "* {opcode = 10;fprintf(stderr, "b");}
+{pre}b{pre} {opcode = 10;fprintf(stderr, "b");}
 
-" "*ble" "* {opcode = 11;fprintf(stderr, "ble");}
+{pre}ble{pre} {opcode = 11;fprintf(stderr, "ble");}
 
-" "*bge" "* {opcode = 12;fprintf(stderr, "bge");}
+{pre}bge{pre} {opcode = 12;fprintf(stderr, "bge");}
 
-" "*write" "* {opcode = 13;fprintf(stderr, "write");}
+{pre}write{pre} {opcode = 13;fprintf(stderr, "write");}
 
-" "*read" "* {opcode = 14; fprintf(stderr, "read");}
+{pre}read{pre} {opcode = 14; fprintf(stderr, "read");}
 
 <<EOF>> {fprintf(stderr, "you found the end of the file.. nioce \n");yyterminate();}
 
@@ -290,7 +306,7 @@ int processAlloc(char *label, short size) {
   sprintf(conv, "%d", freep);
   np = install(label, conv);
   freep += size;
-
+  
   //types of alloc errors:
   // if there is already a symbol duplicate allocation
   // direct addressing reference and its not in symbol table (undeclared variable error
@@ -306,6 +322,17 @@ int preProcessLoadInstruction(char *instructionString) {
   s += 4; //skip over "load"
   while(*s != 'r') s++; //first arg will be a register
   unsigned char reg1_no = s[1] - '0';//get the reg no of 
+}
+
+int processRg1(unsigned char opcode, unsigned char mode,char *reg1)
+{
+  programText[pc].op_code = opcode;
+  while(*reg1 != 'r') reg1++;
+  unsigned char reg1_no = reg1[1] - '0';
+  programText[pc].reg1_no = reg1_no;
+  programText[pc].mode = mode;
+  pc++;
+
 }
 
 int processRg2(unsigned char opcode, char *reg1, char *reg2) 
