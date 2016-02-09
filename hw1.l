@@ -17,8 +17,13 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
     unsigned char opcode = -1;
     unsigned char mode = -1;
     char *mystring;
-    unsigned char reg1 = -1;
-    unsigned char reg2 = -1;
+    char *reg1 = "";
+    char *reg2 = "";
+    short im_constant;
+    int processRg2(unsigned char opcode, char *reg1, char *reg2);
+    int processDRg2(unsigned char opcode, char *reg1, char *var);
+    int processInRg2(unsigned char opcode, char *reg1, char *reg2);
+    int processImRg2(unsigned char opcode, char *reg1, short imm_constant);
 %%
 
 "$"[A-Za-z_]+ {fprintf(stderr, "this is a label breh");}
@@ -27,14 +32,14 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 
 {crap}
 
-[\n]  {alreadyReg1 = false;}
+[\n]  {alreadyReg1 = false;reg1 = ""; reg2 = ""; opcode = -1;}
 
 {reg}  {
           if (alreadyReg1 == false) {
           fprintf(stderr, "this is reg1: ");
-          mystring = malloc(yyleng+1);
-          strcpy(mystring, yytext);
-          fprintf(stderr, "%s", mystring);
+          reg2 = malloc(yyleng+1);
+          strcpy(reg2, yytext);
+          fprintf(stderr, "%s", reg2);
 	  alreadyReg1 = true;
 	  }
        }
@@ -42,9 +47,10 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 {rg2} {
          if (alreadyReg1) {
          fprintf(stderr, "this is reg2: ");
-         mystring = malloc(yyleng+1);
-         strcpy(mystring, yytext); 
-         fprintf(stderr, "%s", mystring); 
+         reg2 = malloc(yyleng+1);
+         strcpy(reg2, yytext); 
+         fprintf(stderr, "%s", reg2);
+	 processRg2(opcode, reg1, reg2);
 	 alreadyReg1 = false;
 	 }
       }
@@ -54,9 +60,10 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 {drg2} {
          if(alreadyReg1) {
 	   fprintf(stderr, "this is direct reg2: ");
-	   mystring = malloc(yyleng+1);
-	   strcpy(mystring, yytext);
-	   fprintf(stderr, "%s", mystring);
+	   reg2 = malloc(yyleng+1);
+	   strcpy(reg2, yytext);
+	   fprintf(stderr, "%s", reg2);
+	   processDRg2(opcode, reg1, reg2);
 	   alreadyReg1 = false;
 	 }
        }
@@ -64,9 +71,9 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 {imrg2} {
          if(alreadyReg1) {
 	 fprintf(stderr, "this is immediate reg2: ");
-	 mystring = malloc(yyleng+1);
-	 strcpy(mystring, yytext);
-	 fprintf(stderr, "%s", mystring);
+	 im_constant = atoi(yytext);
+	 fprintf(stderr, "%s", yytext);
+	 processImRg2(opcode, reg1, im_constant);
 	 alreadyReg1 = false;
 	 }
        }
@@ -74,9 +81,10 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 {inrg2} {
         if(alreadyReg1) {
 	  fprintf(stderr, "this is indirect reg2: ");
-	  mystring = malloc(yyleng+1);
-	  strcpy(mystring, yytext);
-	  fprintf(stderr, "%s", mystring);
+	  reg2 = malloc(yyleng+1);
+	  strcpy(reg2, yytext);
+	  fprintf(stderr, "%s", reg2);
+	  processInRg2(opcode, reg1, reg2);
 	  alreadyReg1 = false;
 	}
 
@@ -121,7 +129,6 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 #define MAX 65536
 
 #include <stdlib.h>
-
 /* 
 * nlist is hashtable implementation from C programming book
 * taken in section 6.6 of The C programming language 2nd edition
@@ -271,22 +278,61 @@ int preProcessLoadInstruction(char *instructionString) {
   unsigned char reg1_no = s[1] - '0';//get the reg no of 
 }
 
-int processRg2(char *opcode, unsigned char mode, unsigned char reg1, unsigned char reg2) 
+int processRg2(unsigned char opcode, char *reg1, char *reg2) 
 {
-  
+  programText[pc].op_code = opcode;
+  while(*reg1 != 'r') reg1++;
+  unsigned char reg1_no = reg1[1] - '0';
+  programText[pc].reg1_no = reg1_no;
+  programText[pc].mode = REGISTER;
+  while (*reg2 != 'r') reg2++;
+  unsigned char reg2_no = reg2[1] - '0';
+  programText[pc].arg2.reg2_no = reg2_no;
+  pc++;
+    
 }
 
-int processDRg2(char *opcode, unsigned char mode, unsigned char reg1, char *var) 
+int processDRg2(unsigned char opcode, char *reg1, char *var) 
 {
-  
+  programText[pc].op_code = opcode;
+  while (*reg1 != 'r') reg1++;
+  unsigned char reg1_no = reg1[1] - '0';
+  programText[pc].reg1_no = reg1_no;
+  programText[pc].mode = DIRECT;
+  struct nlist *np;
+  np = lookup(var);
+  if (np == NULL) 
+  {
+    //throw undeclared variable error
+    fprintf(stderr, "Undeclared variable error");
+    yyterminate();
+  }
+  char *defn = np->defn;
+  unsigned short loc = (unsigned char) strtoul(defn, NULL, 0);
+  programText[pc].arg2.loc = loc;
+  pc++;
 }
 
-int processInRg2(char *opcode, unsigned char mode, unsigned char reg1, unsigned char reg2) 
+int processInRg2(unsigned char opcode, char *reg1,char *reg2) 
 {
-  
+  programText[pc].op_code = opcode;
+  while(*reg1 != 'r') reg1++;
+  unsigned char reg1_no = reg1[1] - '0';
+  programText[pc].reg1_no = reg1_no;
+  programText[pc].mode = INDIRECT;
+  while(*reg2 != 'r') reg2++;
+  unsigned char reg2_no = reg2[1] - '0';
+  programText[pc].arg2.reg2_no = r[reg2_no];
+  pc++;
 }
 
-int processIm(char *opcode, unsigned char mode, unsigned char reg1, short imm_constant) 
+int processImRg2(unsigned char opcode, char *reg1, short imm_constant) 
 {
-  
+  programText[pc].op_code = opcode;
+  while(*reg1 != 'r') reg1++;
+  unsigned char reg1_no = reg1[1] - '0';
+  programText[pc].reg1_no = reg1_no;
+  programText[pc].mode = IMMEDIATE;
+  programText[pc].arg2.imm_const = imm_constant;
+  pc++;
 }
