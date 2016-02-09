@@ -25,6 +25,7 @@ pre [ \0\t\s]*,*[ \0\t\s]*
     char *reg1 = "";
     char *reg2 = "";
     enum comp { LESS, EQUAL, GREATER };
+    unsigned char compVar = -1;
     short im_constant;
     int processRg2(unsigned char opcode, char *reg1, char *reg2);
     int processDRg2(unsigned char opcode, char *reg1, char *var);
@@ -394,3 +395,56 @@ int processImRg2(unsigned char opcode, char *reg1, short imm_constant)
   programText[pc].arg2.imm_const = imm_constant;
   pc++;
 }
+
+int handleBranch(unsigned char opcode, char *label, unsigned char compare) 
+{
+  programText[pc].op_code = opcode;
+  struct nlist *np;
+  np = lookup(label);
+  if (np == NULL)
+  {
+    //we add it and put pc of 0 with
+
+  }
+
+  if (strstr(np->defn, "unresolved") == NULL)
+  {
+    //we potentially branch
+    switch (compare) {
+      case 0: //less
+        if (compVar == 0) {
+	  //branch
+	}
+      break;
+      case 1:
+        if (compVar == 1) {
+	  //branch
+	}
+      break;
+      case 2:
+        if (compVar == 2) {
+	  //branch
+	}
+      break;
+
+    }
+  }
+  else 
+  {
+    //back track the pc of object table
+  }
+}
+
+int handleLabel(char *label)
+{
+  struct nlist *np;
+  np = lookup(label);
+  if (np == NULL) 
+  {
+    char temp[10];
+    sprintf(temp, "%d", pc);
+    np = install(label, temp);
+  }
+
+}
+
