@@ -14,9 +14,11 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 
     #include <stdbool.h>
     bool alreadyReg1 = false;
+    bool allocInstr = false;
     unsigned char opcode = -1;
     unsigned char mode = -1;
-    char *mystring;
+    short labelSize = -1;
+    char *label = "";
     char *reg1 = "";
     char *reg2 = "";
     short im_constant;
@@ -24,6 +26,7 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
     int processDRg2(unsigned char opcode, char *reg1, char *var);
     int processInRg2(unsigned char opcode, char *reg1, char *reg2);
     int processImRg2(unsigned char opcode, char *reg1, short imm_constant);
+    int processAlloc(char *label, short size);
 %%
 
 "$"[A-Za-z_]+ {fprintf(stderr, "this is a label breh");}
@@ -32,26 +35,26 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 
 {crap}
 
-[\n]  {alreadyReg1 = false;reg1 = ""; reg2 = ""; opcode = -1;}
+[\n]  {alreadyReg1 = false;reg1 = ""; reg2 = ""; opcode = -1;label = "";labelSize = -1;}
 
 {reg}  {
           if (alreadyReg1 == false) {
-          fprintf(stderr, "this is reg1: ");
-          reg2 = malloc(yyleng+1);
-          strcpy(reg2, yytext);
-          fprintf(stderr, "%s", reg2);
-	  alreadyReg1 = true;
+            fprintf(stderr, "this is reg1: ");
+            reg2 = malloc(yyleng+1);
+            strcpy(reg2, yytext);
+            fprintf(stderr, "%s", reg2);
+	    alreadyReg1 = true;
 	  }
        }
 
 {rg2} {
          if (alreadyReg1) {
-         fprintf(stderr, "this is reg2: ");
-         reg2 = malloc(yyleng+1);
-         strcpy(reg2, yytext); 
-         fprintf(stderr, "%s", reg2);
-	 processRg2(opcode, reg1, reg2);
-	 alreadyReg1 = false;
+           fprintf(stderr, "this is reg2: ");
+           reg2 = malloc(yyleng+1);
+           strcpy(reg2, yytext); 
+           fprintf(stderr, "%s", reg2);
+	   processRg2(opcode, reg1, reg2);
+	   alreadyReg1 = false;
 	 }
       }
 
@@ -68,13 +71,20 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 	 }
        }
 
-{imrg2} {
+{imrg2} { //double threat regex
+         if(allocInstr) 
+	 {
+	   labelSize = atoi(yytext);
+	   fprintf(stderr, "%s", yytext);
+	   processAlloc(label, labelSize);
+	   allocInstr = false;
+	 }
          if(alreadyReg1) {
-	 fprintf(stderr, "this is immediate reg2: ");
-	 im_constant = atoi(yytext);
-	 fprintf(stderr, "%s", yytext);
-	 processImRg2(opcode, reg1, im_constant);
-	 alreadyReg1 = false;
+	   fprintf(stderr, "this is immediate reg2: ");
+	   im_constant = atoi(yytext);
+	   fprintf(stderr, "%s", yytext);
+	   processImRg2(opcode, reg1, im_constant);
+	   alreadyReg1 = false;
 	 }
        }
 
@@ -90,7 +100,18 @@ inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 
        }
 
-" "*"."alloc" "+[A-Za-z_]+","?" "*[0-9]* {fprintf(stderr,"alloc thisssssss");}
+" "*"."alloc   {allocInstr = true; fprintf(stderr, "alloc. : ");}
+
+" "+[A-Za-z_]+  {
+              if(allocInstr)
+	      {
+	        char *s = yytext;
+		while(isspace(*s)) s++;
+	        label = malloc(strlen(s)+1);
+		strcpy(label, s);
+		fprintf(stderr, "%s", label);
+	      }
+            }
 
 " "*load" "* {opcode = 0;fprintf(stderr, "load");}
 
@@ -252,11 +273,23 @@ int preProcessAllocFunction(char *instructionString) {
   
 }
 
-int processAllocFunction(char *name,unsigned char size) {
+int processAlloc(char *label, short size) {
   //access symbol table
   //symtab: (list: pc)
   //allocate main memory size long
-
+  struct nlist *look;
+  look = lookup(label);
+  if (look != NULL) {
+    //duplicate allocation error
+    fprintf(stderr, "Duplicate allocation error");
+    yyterminate();
+    exit(1);
+  }
+  struct nlist *np;
+  char conv[10];
+  sprintf(conv, "%d", freep);
+  np = install(label, conv);
+  freep += size;
 
   //types of alloc errors:
   // if there is already a symbol duplicate allocation
@@ -264,9 +297,6 @@ int processAllocFunction(char *name,unsigned char size) {
   
   //see a label followed by a colon and its already there and already resolved
   //check to see if any unresolved labels left.. if so thats an error.
-
-
-  freep += size;
   
 }
 
@@ -306,6 +336,7 @@ int processDRg2(unsigned char opcode, char *reg1, char *var)
     //throw undeclared variable error
     fprintf(stderr, "Undeclared variable error");
     yyterminate();
+    exit(1);
   }
   char *defn = np->defn;
   unsigned short loc = (unsigned char) strtoul(defn, NULL, 0);
