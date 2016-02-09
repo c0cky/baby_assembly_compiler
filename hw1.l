@@ -65,6 +65,14 @@ pre [ \0\t\s]*,*[ \0\t\s]*
             fprintf(stderr, "%s", reg2);
 	    alreadyReg1 = true;
 	  }
+	  else  {
+	    fprintf(stderr, "this is reg2: ");
+	    reg2 = malloc(yyleng+1);
+	    strcpy(reg2, yytext);
+	    fprintf(stderr, "%s", reg2);
+	    processRg2(opcode, reg1, reg2);
+	    alreadyReg1 = false;
+	  }
        }
 
 {rg2} {
