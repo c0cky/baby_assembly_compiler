@@ -7,13 +7,15 @@
 
 crap ","" "*
 reg "r"[0-7]{1}
-rg2 [^\$]("("?"r"[0-7]{1}")"?)
-drg2 [^\$]([0-9]+)
-vrg2 ([A-Za-z_]+)
+rg2 [^\$]("r"[0-7]{1})
+imrg2 [^\$]([0-9]+)
+drg2 ([A-Za-z_]+)
+inrg2 [^\S]("("?"r"[0-7]{1}")"?)
 
     #include <stdbool.h>
     bool alreadyReg1 = false;
     unsigned char opcode = -1;
+    unsigned char mode = -1;
     char *mystring;
     unsigned char reg1 = -1;
     unsigned char reg2 = -1;
@@ -47,6 +49,8 @@ vrg2 ([A-Za-z_]+)
 	 }
       }
 
+
+
 {drg2} {
          if(alreadyReg1) {
 	   fprintf(stderr, "this is direct reg2: ");
@@ -57,14 +61,25 @@ vrg2 ([A-Za-z_]+)
 	 }
        }
 
-{vrg2} {
+{imrg2} {
          if(alreadyReg1) {
-	 fprintf(stderr, "this is variable reg2: ");
+	 fprintf(stderr, "this is immediate reg2: ");
 	 mystring = malloc(yyleng+1);
 	 strcpy(mystring, yytext);
 	 fprintf(stderr, "%s", mystring);
 	 alreadyReg1 = false;
 	 }
+       }
+
+{inrg2} {
+        if(alreadyReg1) {
+	  fprintf(stderr, "this is indirect reg2: ");
+	  mystring = malloc(yyleng+1);
+	  strcpy(mystring, yytext);
+	  fprintf(stderr, "%s", mystring);
+	  alreadyReg1 = false;
+	}
+
        }
 
 " "*"."alloc" "+[A-Za-z_]+","?" "*[0-9]* {fprintf(stderr,"alloc thisssssss");}
@@ -113,6 +128,9 @@ vrg2 ([A-Za-z_]+)
 * 
 * authored by Dennis Ritchie and Brian Kernighan
 *
+*
+* ACM Citation: 
+* Brian W. Kernighan and Dennis M. Ritchie. 1989. The C Programming Language. Prentice Hall Press, Upper Saddle River, NJ, USA.
 */
 struct nlist { /* table entry: */
     struct nlist *next; /* next entry in chain */
@@ -142,7 +160,6 @@ struct nlist *lookup(char *s)
     return NULL; /* not found */
 }
 
-char *strdup(char *);
 /* install: put (name, defn) in hashtab */
 struct nlist *install(char *name, char *defn)
 {
@@ -163,15 +180,6 @@ struct nlist *install(char *name, char *defn)
 }
 //end of nlist implementation from The C Programming Language 2nd edition
 
-char *strdup(char *s) /* make a duplicate of s */
-{
-    char *p;
-    p = (char *) malloc(strlen(s)+1); /* +1 for ’\0’ */
-    if (p != NULL)
-       strcpy(p, s);
-    return p;
-}
-
 enum opCodes { LOAD, LOADA, STORE, MOVE, ADD, SUB, MUL, DIV, MOD, CMP };
 enum modes { REGISTER, DIRECT, INDIRECT, IMMEDIATE };
 typedef struct INSTRS {
@@ -185,7 +193,7 @@ typedef struct INSTRS {
   } arg2;
 } INSTR; //synonym for this structure type
 INSTR programText[MAX];
-int pc = 0; //program counter
+int pc = 1; //program counter
 int freep = 0;
 long int r[8];
 int main(argc, argv)
@@ -193,10 +201,10 @@ int argc;
 char **argv;
 {
   ++argv, --argc;
-  programText[1].op_code = LOAD;
-  programText[1].reg1_no = 6;
-  programText[1].mode = DIRECT;
-  programText[1].arg2.loc = 100;
+  //programText[1].op_code = LOAD;
+  //programText[1].reg1_no = 6;
+  //programText[1].mode = DIRECT;
+  //programText[1].arg2.loc = 100;
   sizeof(INSTR);
   if (argc > 0)
   {
@@ -263,8 +271,22 @@ int preProcessLoadInstruction(char *instructionString) {
   unsigned char reg1_no = s[1] - '0';//get the reg no of 
 }
 
-int processInstruction(char *opcode, unsigned char mode, unsigned char reg1, unsigned char other) {
+int processRg2(char *opcode, unsigned char mode, unsigned char reg1, unsigned char reg2) 
+{
   
 }
 
+int processDRg2(char *opcode, unsigned char mode, unsigned char reg1, char *var) 
+{
+  
+}
 
+int processInRg2(char *opcode, unsigned char mode, unsigned char reg1, unsigned char reg2) 
+{
+  
+}
+
+int processIm(char *opcode, unsigned char mode, unsigned char reg1, short imm_constant) 
+{
+  
+}
