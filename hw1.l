@@ -25,6 +25,7 @@ pre [ \0\t\s]*,*[ \0\t\s]*
     char *reg1 = "";
     char *reg2 = "";
     enum comp { LESS, EQUAL, GREATER };
+    enum statuses { RESOLVED, UNRESOLVED, ID };
     unsigned char compVar = -1;
     short im_constant;
     int processRg2(unsigned char opcode, char *reg1, char *reg2);
@@ -270,7 +271,7 @@ char **argv;
   yylex();
 }
 
-//$ is a resolved label. Store in symbol table
+//$label: is a resolved label. Store in symbol table
 //identifier, resolved, and unresolved label
 //indirect is store r0, (r2) look at contents of r2
 //interpret as index of main memory and get that
@@ -286,17 +287,7 @@ char **argv;
 
 //put a pointer for bgt back to the blt then update the 
 //dictionary $done: 12 (the bgt index)
-//when finally get down to $done... the backpack it
-
-int preProcessAllocFunction(char *instructionString) {
-  char *s = instructionString;
-  char *label;
-  while(*s != '.') s++;
-  s += 6; //skip over ".alloc"
-  while(!isalpha(*s)) s++;
-  while((isalpha(*s) || isdigit(*s)) && *s != ',' && *s != ' ') s++;
-  
-}
+//when finally get down to $done... the backpatch it
 
 int processAlloc(char *label, short size) {
   //access symbol table
@@ -323,14 +314,6 @@ int processAlloc(char *label, short size) {
   //see a label followed by a colon and its already there and already resolved
   //check to see if any unresolved labels left.. if so thats an error.
   
-}
-
-int preProcessLoadInstruction(char *instructionString) {
-  char *s = instructionString;
-  while(*s != 'l') s++;
-  s += 4; //skip over "load"
-  while(*s != 'r') s++; //first arg will be a register
-  unsigned char reg1_no = s[1] - '0';//get the reg no of 
 }
 
 int processRg1(unsigned char opcode, unsigned char mode,char *reg1)
@@ -439,7 +422,7 @@ int handleBranch(unsigned char opcode, char *label, unsigned char compare)
   }
   else 
   {
-    //back track the pc of object table
+    
   }
 }
 
@@ -453,6 +436,11 @@ int handleLabel(char *label)
     sprintf(temp, "%d", pc);
     np = install(label, temp);
   }
-
+  else 
+  {
+    fprintf(stderr, "duplicate  label error");
+    yyterminate();
+    exit(1);
+  }
 }
 
