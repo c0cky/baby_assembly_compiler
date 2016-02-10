@@ -25,7 +25,6 @@ pre [ \0\t\s]*,*[ \0\t\s]*
     char *reg1 = "";
     char *reg2 = "";
     enum comp { LESS, EQUAL, GREATER };
-    enum statuses { RESOLVED, UNRESOLVED, ID };
     unsigned char compVar = -1;
     short im_constant;
     int processRg2(unsigned char opcode, char *reg1, char *reg2);
@@ -190,6 +189,7 @@ struct nlist { /* table entry: */
     struct nlist *next; /* next entry in chain */
     char *name; /* defined name */
     char *defn; /* replacement text */
+    char *status;
 };
 
 #define HASHSIZE 101
@@ -215,7 +215,7 @@ struct nlist *lookup(char *s)
 }
 
 /* install: put (name, defn) in hashtab */
-struct nlist *install(char *name, char *defn)
+struct nlist *install(char *name, char *defn, char *status)
 {
     struct nlist *np;
     unsigned hashval;
@@ -228,7 +228,10 @@ struct nlist *install(char *name, char *defn)
         hashtab[hashval] = np;
     } else /* already there */
         free((void *) np->defn); /*free previous defn */
+	free((void *) np->status);
     if ((np->defn = strdup(defn)) == NULL)
+       return NULL;
+    if ((np->status = strdup(status)) == NULL)
        return NULL;
     return np;
 }
@@ -304,7 +307,7 @@ int processAlloc(char *label, short size) {
   struct nlist *np;
   char conv[10];
   sprintf(conv, "%d", freep);
-  np = install(label, conv);
+  np = install(label, conv, "ID");
   freep += size;
   
   //types of alloc errors:
@@ -434,7 +437,7 @@ int handleLabel(char *label)
   {
     char temp[10];
     sprintf(temp, "%d", pc);
-    np = install(label, temp);
+    np = install(label, temp, "RESOLVED");
   }
   else 
   {
