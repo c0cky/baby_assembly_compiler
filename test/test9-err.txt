@@ -1,0 +1,6 @@
+line 6: $foo is not an unresolved label
+line 9: variable a not allocated
+line 11: duplicate allocation of list
+Unresolved labels:
+  $bar
+There were 4 errors---quitting.
