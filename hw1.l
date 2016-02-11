@@ -8,10 +8,10 @@
 crap ","" "*
 tab [\t]*
 reg "r"[0-7]{1}
-rg2 [^\$]("r"[0-7]{1})
-imrg2 [^\$]([0-9]+)
+rg2 [^\$](r[0-7]{1})
+imrg2 [^\$]?([0-9]+)
 drg2 ([A-Za-z_]+)
-inrg2 [^\S]("("?"r"[0-7]{1}")"?)
+inrg2 [^\$]("("?"r"[0-7]{1}")"?)
 pre [ \0\t\s]*,*[ \0\t\s]*
 
     #include <stdbool.h>
@@ -155,6 +155,7 @@ pre [ \0\t\s]*,*[ \0\t\s]*
 	   //fprintf(stderr, "this is immediate reg2: ");
 	   im_constant = atoi(yytext);
 	   //fprintf(stderr, "%s", yytext);
+	   fprintf(stderr, "im const = %d\n", im_constant);
 	   processImRg2(opcode, reg1, im_constant);
 	   alreadyReg1 = false;
 	 }
@@ -450,17 +451,21 @@ int handleBranch(unsigned char opcode, char *label)
   np = lookup(label);
   if (np == NULL)
   {
+     fprintf(stderr, "add it to table");
     //we add it and put pc of 0 with
     programText[pc].arg2.loc = 0;
     np = install(label, (char*) &pc, "UNRESOLVED");
-  } else if (strstr(np->status, "UNRESOLVED") == NULL)
+    fprintf(stderr, " %s\n", np->defn);
+  } else if (strstr(np->status, "UNRESOLVED") != NULL)
   {
+    
     programText[pc].arg2.loc = atoi(np->defn);
     np = install(label, (char*) &pc, "UNRESOLVED");
   } else 
   {
     programText[pc].arg2.loc = atoi(np->defn);
   }
+  pc++;
 }
 
 int handleLabel(char *label)
@@ -474,7 +479,11 @@ int handleLabel(char *label)
     sprintf(temp, "%d", pc);
     np = install(label, temp, "RESOLVED");
   }
-  else 
+  else if (strstr(np->status, "UNRESOLVED"))
+  {
+    
+  }
+  else if (strstr(np->status, "RESOLVED"))
   {
     fprintf(stderr, "duplicate  label error");
     yyterminate();
@@ -486,7 +495,7 @@ int executeInstructions()
 {
  int i;
  for(i = 1; i < pc; i++){
-   fprintf(stderr, "opcode: %d\n", programText[i].op_code);
+   fprintf(stderr, "%d, %d, %d, %d, %d, %d, %d \n", i, programText[i].op_code, programText[i].mode, programText[i].reg1_no, programText[i].arg2.loc, programText[i].arg2.imm_const, programText[i].arg2.reg2_no);
    switch(programText[i].op_code) {
      case LOAD: executeLoad(i);
      break;
@@ -706,8 +715,8 @@ int executeWrite(int i) {
 }
 
 int executeRead(int i) {
-  fprintf(stderr, "%ld\n",r[programText[i].reg1_no]);
   scanf("%ld", &r[programText[i].reg1_no]);
+  fprintf(stderr, "%ld\n", r[programText[i].reg1_no]);
 }
 
 
