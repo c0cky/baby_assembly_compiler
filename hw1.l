@@ -67,7 +67,8 @@ pre [ \0\t\s]*,*[ \0\t\s]*
 
 "$"[A-Za-z_]+":" {
                   char *mystring;
-		  mystring = malloc(yyleng);
+		  mystring = malloc(yyleng+1);
+		  yytext[yyleng - 1]='\0';
 		  strcpy(mystring, yytext);
                   handleLabel(mystring);
 		  /*fprintf(stderr, "this is a label branch");*/
@@ -155,7 +156,6 @@ pre [ \0\t\s]*,*[ \0\t\s]*
 	   //fprintf(stderr, "this is immediate reg2: ");
 	   im_constant = atoi(yytext);
 	   //fprintf(stderr, "%s", yytext);
-	   fprintf(stderr, "im const = %d\n", im_constant);
 	   processImRg2(opcode, reg1, im_constant);
 	   alreadyReg1 = false;
 	 }
@@ -214,7 +214,7 @@ pre [ \0\t\s]*,*[ \0\t\s]*
 
 {pre}read{pre} {opcode = 18; /*fprintf(stderr, "read");*/}
 
-<<EOF>> {fprintf(stderr, "you found the end of the file.. nioce \n");executeInstructions();yyterminate();}
+<<EOF>> {/*fprintf(stderr, "you found the end of the file.. nioce \n");*/executeInstructions();yyterminate();}
 
 %%
 
@@ -351,7 +351,6 @@ int processAlloc(char *label, short size) {
     yyterminate();
     exit(1);
   }
-  fprintf(stderr, "process Alloc: %s, %d\n", label, size);
   struct nlist *np;
   char conv[10];
   sprintf(conv, "%d", freep);
@@ -370,7 +369,6 @@ int processAlloc(char *label, short size) {
 
 int processRg1(unsigned char opcode, unsigned char mode, char *reg1)
 {
-  fprintf(stderr, "processRg1: %d, %d, %s\n", opcode, mode, reg1);
   programText[pc].op_code = opcode;
   while(*reg1 != 'r') reg1++;
   unsigned char reg1_no = reg1[1] - '0';
@@ -382,7 +380,6 @@ int processRg1(unsigned char opcode, unsigned char mode, char *reg1)
 
 int processRg2(unsigned char opcode, char *reg1, char *reg2) 
 {
-  fprintf(stderr, "process Rg2: %d, %s, %s\n", opcode, reg1, reg2);
   programText[pc].op_code = opcode;
   while(*reg1 != 'r') reg1++;
   unsigned char reg1_no = reg1[1] - '0';
@@ -397,7 +394,6 @@ int processRg2(unsigned char opcode, char *reg1, char *reg2)
 
 int processDRg2(unsigned char opcode, char *reg1, char *var) 
 {
-  fprintf(stderr, "process Direct rg2: %d, %s, %s\n", opcode, reg1, var);
   programText[pc].op_code = opcode;
   while (*reg1 != 'r') reg1++;
   unsigned char reg1_no = reg1[1] - '0';
@@ -419,7 +415,6 @@ int processDRg2(unsigned char opcode, char *reg1, char *var)
 
 int processInRg2(unsigned char opcode, char *reg1,char *reg2) 
 {
-  fprintf(stderr, "process indirect rg2: %d, %s, %s\n", opcode, reg1, reg2);
   programText[pc].op_code = opcode;
   while(*reg1 != 'r') reg1++;
   unsigned char reg1_no = reg1[1] - '0';
@@ -433,7 +428,6 @@ int processInRg2(unsigned char opcode, char *reg1,char *reg2)
 
 int processImRg2(unsigned char opcode, char *reg1, short imm_constant) 
 {
-  fprintf(stderr, "process imm rg2: %d, %s, %d\n", opcode, reg1, imm_constant);
   programText[pc].op_code = opcode;
   while(*reg1 != 'r') reg1++;
   unsigned char reg1_no = reg1[1] - '0';
@@ -445,22 +439,23 @@ int processImRg2(unsigned char opcode, char *reg1, short imm_constant)
 
 int handleBranch(unsigned char opcode, char *label) 
 {
-  fprintf(stderr, "handle branch: %d, %s\n", opcode, label); 
   programText[pc].op_code = opcode;
   struct nlist *np;
   np = lookup(label);
   if (np == NULL)
   {
-     fprintf(stderr, "add it to table");
     //we add it and put pc of 0 with
     programText[pc].arg2.loc = 0;
-    np = install(label, (char*) &pc, "UNRESOLVED");
-    fprintf(stderr, " %s\n", np->defn);
+    char temp[10];
+    sprintf(temp, "%d", pc);
+    np = install(label, temp, "UNRESOLVED");
   } else if (strstr(np->status, "UNRESOLVED") != NULL)
   {
     
     programText[pc].arg2.loc = atoi(np->defn);
-    np = install(label, (char*) &pc, "UNRESOLVED");
+    char temp[10];
+    sprintf(temp, "%d", pc);
+    np = install(label, temp, "UNRESOLVED");
   } else 
   {
     programText[pc].arg2.loc = atoi(np->defn);
@@ -470,7 +465,6 @@ int handleBranch(unsigned char opcode, char *label)
 
 int handleLabel(char *label)
 {
-  fprintf(stderr, "handle label %s\n", label); 
   struct nlist *np;
   np = lookup(label);
   if (np == NULL) 
@@ -479,9 +473,18 @@ int handleLabel(char *label)
     sprintf(temp, "%d", pc);
     np = install(label, temp, "RESOLVED");
   }
-  else if (strstr(np->status, "UNRESOLVED"))
+  else if (strstr(np->status, "UNRESOLVED") != NULL)
   {
-    
+    int next = atoi(np->defn);
+    char temp[10];
+    sprintf(temp, "%d", pc);
+    np = install(label, temp, "RESOLVED");
+    int current;
+    while(next != 0) {
+      current = next;
+      next = programText[current].arg2.loc;
+      programText[current].arg2.loc = pc;
+    }
   }
   else if (strstr(np->status, "RESOLVED"))
   {
@@ -495,7 +498,6 @@ int executeInstructions()
 {
  int i;
  for(i = 1; i < pc; i++){
-   fprintf(stderr, "%d, %d, %d, %d, %d, %d, %d \n", i, programText[i].op_code, programText[i].mode, programText[i].reg1_no, programText[i].arg2.loc, programText[i].arg2.imm_const, programText[i].arg2.reg2_no);
    switch(programText[i].op_code) {
      case LOAD: executeLoad(i);
      break;
@@ -664,27 +666,27 @@ int executeCmp(int i) {
 
 int executeB(int *i) {
   int sub = *i;
-  *i = programText[sub].arg2.loc;
+  *i = programText[sub].arg2.loc-1;
 }
 
 int executeBlt(int *i) {
-  if (compVar = LESS) {
+  if (compVar == LESS) {
     int sub = *i;
-    *i = programText[sub].arg2.loc;
+    *i = programText[sub].arg2.loc-1;
   }
 }
 
 int executeBle(int *i) {
-  if (compVar = LESS || compVar == EQUAL) {
+  if (compVar == LESS || compVar == EQUAL) {
     int sub = *i;
-    *i = programText[sub].arg2.loc;
+    *i = programText[sub].arg2.loc-1;
   }
 }
 
 int executeBne(int *i) {
-  if (compVar = LESS || compVar == GREATER) {
+  if (compVar == LESS || compVar == GREATER) {
     int sub = *i;
-    *i = programText[sub].arg2.loc;
+    *i = programText[sub].arg2.loc-1;
   }
 }
 
@@ -692,31 +694,29 @@ int executeBne(int *i) {
 int executeBeq(int *i) {
   if(compVar == EQUAL) {
     int sub = *i;
-    *i = programText[sub].arg2.loc;
+    *i = programText[sub].arg2.loc-1;
   }
 }
 
 int executeBge(int *i) {
   if(compVar == EQUAL || compVar == GREATER) {
     int sub = *i;
-    *i = programText[sub].arg2.loc;
+    *i = programText[sub].arg2.loc-1;
   }
 }
 int executeBgt(int *i) {
   if(compVar ==  GREATER) {
     int sub = *i;
-    *i = programText[sub].arg2.loc;
+    *i = programText[sub].arg2.loc-1;
   }
 }
 
 int executeWrite(int i) {
-  fprintf(stderr, "%ld\n", r[programText[i].reg1_no]);
   fprintf(stdout, "%ld\n", r[programText[i].reg1_no]);
 }
 
 int executeRead(int i) {
   scanf("%ld", &r[programText[i].reg1_no]);
-  fprintf(stderr, "%ld\n", r[programText[i].reg1_no]);
 }
 
 
